@@ -86,7 +86,7 @@ Every resource-creating call sends an `Idempotency-Key` derived from the *questi
 - Guide: https://arcnautical.com/developers/
 - Reference: https://arcnautical.com/developers/reference/
 - OpenAPI 3.1: https://arcnautical.com/api/v1/openapi.json
-- Postman: https://www.postman.com/arcnautical-6322764/arcnautical-s-workspace/collection/58176192-d853deeb-b9eb-4ea7-b1d1-99b7b2d5d2a4
+- Postman: https://www.postman.com/arcnautical-6322764/arcnautical-s-workspace
 - For agents: https://arcnautical.com/llms.txt
 
 ## Development
