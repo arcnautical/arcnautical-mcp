@@ -3,7 +3,7 @@
   "name": "io.github.SaltyTaro/arcnautical",
   "description": "Screen any vessel by IMO for sanctions, ownership opacity and vetting grade. Keyless check included.",
   "repository": {
-    "url": "https://github.com/SaltyTaro/arcnautical-mcp",
+    "url": "https://github.com/arcnautical/arcnautical-mcp",
     "source": "github"
   },
   "version": "0.1.1",

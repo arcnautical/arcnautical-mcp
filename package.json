@@ -7,10 +7,10 @@
   "homepage": "https://arcnautical.com/developers/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SaltyTaro/arcnautical-mcp.git"
+    "url": "git+https://github.com/arcnautical/arcnautical-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/SaltyTaro/arcnautical-mcp/issues"
+    "url": "https://github.com/arcnautical/arcnautical-mcp/issues"
   },
   "keywords": [
     "mcp",
