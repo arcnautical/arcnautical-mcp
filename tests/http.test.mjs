@@ -69,6 +69,16 @@ test('remote: initialize, list seven tools, call the keyless tool, and the stub 
   // Declared output shapes, and empty (not refused) resource/prompt lists.
   const check = tools.find((x) => x.name === 'check_vessel');
   assert.ok(check.outputSchema?.properties?.sanctions, 'check_vessel declares its output');
+  for (const tool of tools) {
+    assert.ok(tool.outputSchema?.type === 'object', `${tool.name} declares an output shape`);
+    for (const [name, prop] of Object.entries(tool.inputSchema.properties ?? {})) {
+      assert.ok(prop.description, `${tool.name}.${name} has a parameter description`);
+    }
+  }
+  const init = client.getServerVersion();
+  assert.equal(init.title, 'ArcNautical');
+  assert.match(init.description, /sanctions/);
+  assert.equal(init.icons[0].src, 'https://arcnautical.com/logo-512.png');
   assert.deepEqual((await client.listResources()).resources, []);
   assert.deepEqual((await client.listPrompts()).prompts, []);
   await client.close();

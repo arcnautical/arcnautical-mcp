@@ -49,6 +49,39 @@ const CHECK_OUTPUT = {
   fullReport: z.string().optional().describe('Human-readable report URL for this hull'),
   rate_limit: z.object({ limit: z.number().nullable(), remaining: z.number().nullable(), reset: z.string().nullable() }).describe('Keyless allowance for the caller\'s address'),
 };
+const RECORD_OUTPUT = {
+  id: z.string().optional().describe('Screening record id, retained ten years'),
+  imo: z.string().optional(),
+  sanctions: z.object({ status: z.string().optional().describe('RED | AMBER | GREEN | INCOMPLETE'), detail: z.string().optional() }).passthrough().optional(),
+  ownership: z.object({ opacity: z.string().nullable().optional(), score: z.number().nullable().optional() }).passthrough().optional(),
+  vetting: z.object({ grade: z.string().nullable().optional(), status: z.string().optional() }).passthrough().optional(),
+  screened_at: z.string().optional().describe('ISO-8601 time the sources were read'),
+  vessel_name: z.string().nullable().optional(),
+};
+const BATCH_OUTPUT = {
+  batch: z.object({ id: z.string().optional(), status: z.string().optional().describe('queued | running | completed | partial | failed') }).passthrough().describe('The batch as last read'),
+  items: z.array(z.object({
+    imo: z.string().nullable().optional(),
+    status: z.string().optional(),
+    screening_id: z.string().nullable().optional(),
+    result_body: z.object({ sanctions: z.object({ status: z.string().optional() }).passthrough().optional() }).passthrough().nullable().optional(),
+  }).passthrough()).describe('One row per hull'),
+};
+const VOYAGE_OUTPUT = {
+  id: z.string().optional().describe('Assessment id'),
+  score: z.number().optional().describe('0-100, higher is riskier'),
+  risk_level: z.string().optional().describe('low | moderate | elevated | high | severe'),
+  confidence: z.number().optional().describe('0-1'),
+  missing_sources: z.array(z.string()).optional().describe('Signals that could not be read for this assessment'),
+  route: z.object({ distance_nm: z.number().optional() }).passthrough().optional(),
+  signals: z.unknown().optional(),
+};
+const USAGE_OUTPUT = {
+  environment: z.string().optional().describe('live | test'),
+  assessments: z.object({}).passthrough().optional().describe('Allowance, used, remaining and reset per environment'),
+  screenings: z.object({}).passthrough().optional(),
+  limits: z.object({}).passthrough().optional(),
+};
 const PORTS_OUTPUT = {
   ports: z.array(z.object({
     locode: z.string().describe('UN/LOCODE, e.g. NLRTM'),
@@ -96,7 +129,14 @@ export function createServer(opts: ClientOptions = {}): McpServer {
   const client = new ArcNauticalClient({ ...opts, apiKey, baseUrl: opts.baseUrl ?? process.env.ARCNAUTICAL_BASE_URL });
 
   const server = new McpServer(
-    { name: SERVER_NAME, version: SERVER_VERSION },
+    {
+      name: SERVER_NAME,
+      version: SERVER_VERSION,
+      title: 'ArcNautical',
+      description: 'Screen any vessel by IMO for sanctions, ownership opacity and vetting grade. Keyless check included.',
+      websiteUrl: 'https://arcnautical.com/developers/#mcp',
+      icons: [{ src: 'https://arcnautical.com/logo-512.png', mimeType: 'image/png', sizes: ['512x512'] }],
+    },
     {
       instructions:
         'ArcNautical screens commercial vessels for sanctions and risk. Identify a ship by its seven-digit IMO number ' +
@@ -172,6 +212,7 @@ export function createServer(opts: ClientOptions = {}): McpServer {
         customer_reference: z.string().max(128).optional().describe('Your own reference (order id, voyage id); echoed on the record'),
         include_vetting: z.boolean().optional().describe('false skips the vetting grade for a faster sanctions-only screen'),
       },
+      outputSchema: RECORD_OUTPUT,
       annotations: { readOnlyHint: false, openWorldHint: true, idempotentHint: true },
     },
     async (input) => {
@@ -195,6 +236,7 @@ export function createServer(opts: ClientOptions = {}): McpServer {
         imos: z.array(IMO).min(1).max(50).describe('Up to 50 seven-digit IMO numbers'),
         include_vetting: z.boolean().optional().describe('false skips the vetting grade for a faster sanctions-only screen'),
       },
+      outputSchema: BATCH_OUTPUT,
       annotations: { readOnlyHint: false, openWorldHint: true, idempotentHint: true },
     },
     async ({ imos, include_vetting }) => {
@@ -216,6 +258,7 @@ export function createServer(opts: ClientOptions = {}): McpServer {
       title: 'Retrieve a screening record (API key)',
       description: 'Fetch a stored screening record by id — the audit copy, retained ten years. Needs ARCNAUTICAL_API_KEY.',
       inputSchema: { id: z.string().uuid().describe('Screening id returned by screen_vessel or in a batch item') },
+      outputSchema: RECORD_OUTPUT,
       annotations: { readOnlyHint: true, openWorldHint: true, idempotentHint: true },
     },
     async ({ id }) => {
@@ -237,12 +280,13 @@ export function createServer(opts: ClientOptions = {}): McpServer {
       inputSchema: {
         origin: z.string().regex(/^[A-Za-z]{5}$/).describe('Origin UN/LOCODE, e.g. NLRTM'),
         destination: z.string().regex(/^[A-Za-z]{5}$/).describe('Destination UN/LOCODE, e.g. CNSHA'),
-        vessel_type: z.enum(['container', 'bulk', 'tanker', 'lng', 'general']).optional(),
-        load_condition: z.enum(['laden', 'ballast']).optional(),
-        speed_knots: z.number().min(8).max(25).optional(),
-        dwt_tonnes: z.number().min(1).max(600000).optional(),
-        customer_reference: z.string().max(128).optional(),
+        vessel_type: z.enum(['container', 'bulk', 'tanker', 'lng', 'general']).optional().describe('Vessel class; changes which threat signals weigh most (default: general)'),
+        load_condition: z.enum(['laden', 'ballast']).optional().describe('laden or ballast; affects exposure on the transit'),
+        speed_knots: z.number().min(8).max(25).optional().describe('Planned service speed, 8-25 knots; sets transit time through each risk area'),
+        dwt_tonnes: z.number().min(1).max(600000).optional().describe('Deadweight in tonnes; used for chokepoint and draught constraints'),
+        customer_reference: z.string().max(128).optional().describe('Your own reference (voyage id, fixture); echoed on the assessment'),
       },
+      outputSchema: VOYAGE_OUTPUT,
       annotations: { readOnlyHint: false, openWorldHint: true, idempotentHint: true },
     },
     async (input) => {
@@ -264,6 +308,7 @@ export function createServer(opts: ClientOptions = {}): McpServer {
       title: 'Usage and quota (API key)',
       description: 'Live and test usage, remaining allowance, reset time, batch limits and monitor capacity for the configured key.',
       inputSchema: {},
+      outputSchema: USAGE_OUTPUT,
       annotations: { readOnlyHint: true, openWorldHint: true, idempotentHint: true },
     },
     async () => {
