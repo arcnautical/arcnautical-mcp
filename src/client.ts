@@ -21,6 +21,24 @@ export interface ClientOptions {
   /** Milliseconds before a request is abandoned. A screen with vetting enrichment can take several seconds. */
   timeoutMs?: number;
   fetch?: typeof fetch;
+  /**
+   * How the model reached us. It only changes the remedy in the "this tool
+   * needs a key" error: on stdio the key is an environment variable of the
+   * process; on the remote endpoint it is an Authorization header on the
+   * request, and telling an HTTP caller to edit an environment they do not
+   * have is a dead end.
+   */
+  transport?: 'stdio' | 'http';
+  /**
+   * The ORIGINAL caller's address, forwarded as X-Forwarded-For (and, when
+   * known, CF-Connecting-IP). Set by the remote endpoint only: it sits behind
+   * the edge and calls the API from one address, and without this every
+   * remote user would share one keyless allowance and one audit identity.
+   * The edge trusts the header only from the docker network, so a stdio
+   * install setting it changes nothing.
+   */
+  forwardedFor?: string;
+  cfConnectingIp?: string;
 }
 
 export interface ApiErrorBody {
@@ -63,17 +81,35 @@ export interface RateLimitInfo {
 const DEFAULT_BASE = 'https://arcnautical.com';
 const USER_AGENT = '@arcnautical/mcp';
 
+/** The 401 the model receives when a keyed tool is called with no key. */
+export function keyRequiredError(transport: 'stdio' | 'http'): ArcNauticalError {
+  const where = transport === 'http'
+    ? 'Send it as an Authorization: Bearer header on the MCP request (Claude Code: `claude mcp add --transport http arcnautical https://mcp.arcnautical.com/mcp --header "Authorization: Bearer arc_live_..."`).'
+    : 'Set ARCNAUTICAL_API_KEY in the MCP server environment.';
+  return new ArcNauticalError(401, {
+    code: 'api_key_required',
+    message: `This tool needs an ArcNautical API key. ${where}`,
+    remedy: 'Mint a key self-serve at https://arcnautical.com/arcnautical.html#/developer-api (no approval step); the check_vessel and find_port tools work without one.',
+  }, null);
+}
+
 export class ArcNauticalClient {
   private readonly baseUrl: string;
   private readonly apiKey: string | undefined;
   private readonly timeoutMs: number;
   private readonly fetchImpl: typeof fetch;
+  private readonly transport: 'stdio' | 'http';
+  private readonly forwarded: Record<string, string>;
 
   constructor(opts: ClientOptions = {}) {
     this.baseUrl = (opts.baseUrl ?? DEFAULT_BASE).replace(/\/$/, '');
     this.apiKey = opts.apiKey?.trim() || undefined;
     this.timeoutMs = opts.timeoutMs ?? 30_000;
     this.fetchImpl = opts.fetch ?? fetch;
+    this.transport = opts.transport ?? 'stdio';
+    this.forwarded = {};
+    if (opts.forwardedFor) this.forwarded['X-Forwarded-For'] = opts.forwardedFor;
+    if (opts.cfConnectingIp) this.forwarded['CF-Connecting-IP'] = opts.cfConnectingIp;
   }
 
   get hasKey(): boolean {
@@ -185,15 +221,13 @@ export class ArcNauticalClient {
     path: string,
     opts: { keyless?: boolean; body?: unknown; idempotencyKey?: string } = {},
   ): Promise<Response> {
-    const headers: Record<string, string> = { Accept: 'application/json', 'User-Agent': USER_AGENT };
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      'User-Agent': this.transport === 'http' ? `${USER_AGENT} (remote)` : USER_AGENT,
+      ...this.forwarded,
+    };
     if (!opts.keyless) {
-      if (!this.apiKey) {
-        throw new ArcNauticalError(401, {
-          code: 'api_key_required',
-          message: 'This tool needs an ArcNautical API key. Set ARCNAUTICAL_API_KEY in the MCP server environment.',
-          remedy: 'Mint a key self-serve at https://arcnautical.com/arcnautical.html#/developer-api (no approval step); the check_vessel and find_port tools work without one.',
-        }, null);
-      }
+      if (!this.apiKey) throw keyRequiredError(this.transport);
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
     if (opts.body !== undefined) headers['Content-Type'] = 'application/json';

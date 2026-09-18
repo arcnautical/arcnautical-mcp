@@ -9,15 +9,21 @@
  *
  * Every tool returns the API's JSON as structured content AND a short text
  * rendering, because some clients show only one of the two.
+ *
+ * The same server is served two ways: over stdio by cli.ts (a local install)
+ * and over Streamable HTTP by http.ts (https://mcp.arcnautical.com/mcp). The
+ * tools do not know which; only the client's key remedy and the forwarded
+ * caller address differ, and both arrive through ClientOptions.
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { ArcNauticalClient, ArcNauticalError, type ClientOptions } from './client.js';
 
 export { ArcNauticalClient, ArcNauticalError } from './client.js';
+export type { ClientOptions } from './client.js';
 
 export const SERVER_NAME = 'arcnautical';
-export const SERVER_VERSION = '0.1.2';
+export const SERVER_VERSION = '0.2.0';
 
 const IMO = z.string().regex(/^\d{7}$/, 'A seven-digit IMO number, e.g. 9274446').describe('Seven-digit IMO number of the vessel');
 

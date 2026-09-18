@@ -1,7 +1,7 @@
 {
   "name": "@arcnautical/mcp",
-  "version": "0.1.2",
-  "description": "MCP server for the ArcNautical API: screen any vessel by IMO for sanctions, ownership opacity and vetting grade from Claude, ChatGPT, Cursor or any MCP client. The check needs no API key.",
+  "version": "0.2.0",
+  "description": "MCP server for the ArcNautical API: screen any vessel by IMO for sanctions, ownership opacity and vetting grade from Claude, ChatGPT, Cursor or any MCP client. The check needs no API key. Local (stdio) or remote at https://mcp.arcnautical.com/mcp.",
   "license": "MIT",
   "author": "ArcNautical <admin@arcnautical.com> (https://arcnautical.com)",
   "homepage": "https://arcnautical.com/developers/",
@@ -31,7 +31,8 @@
   ],
   "type": "module",
   "bin": {
-    "arcnautical-mcp": "dist/cli.js"
+    "arcnautical-mcp": "dist/cli.js",
+    "arcnautical-mcp-http": "dist/serve.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -39,6 +40,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./http": {
+      "types": "./dist/http.d.ts",
+      "import": "./dist/http.js"
     }
   },
   "files": [
@@ -54,7 +59,8 @@
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test tests/*.test.mjs",
     "prepublishOnly": "npm test",
-    "start": "node dist/cli.js"
+    "start": "node dist/cli.js",
+    "start:http": "node dist/serve.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

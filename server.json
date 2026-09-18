@@ -6,14 +6,28 @@
     "url": "https://github.com/arcnautical/arcnautical-mcp",
     "source": "github"
   },
-  "version": "0.1.2",
+  "version": "0.2.0",
   "websiteUrl": "https://arcnautical.com/developers/",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.arcnautical.com/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Optional. `Bearer <API key>` unlocks the full screening record, batches, voyage scoring and usage; self-serve at https://arcnautical.com/arcnautical.html#/developer-api. check_vessel and find_port work with no header.",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    }
+  ],
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@arcnautical/mcp",
-      "version": "0.1.2",
+      "version": "0.2.0",
       "transport": {
         "type": "stdio"
       },

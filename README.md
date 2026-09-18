@@ -2,14 +2,53 @@
 
 An [MCP](https://modelcontextprotocol.io) server for the [ArcNautical API](https://arcnautical.com/developers/): screen any commercial vessel by IMO number for sanctions, ownership opacity and a vetting grade — from Claude, ChatGPT, Cursor, VS Code, Windsurf or any MCP client.
 
-**Two tools need no API key at all.** Install it, ask "is IMO 9274446 sanctioned?", get the answer.
+**Two tools need no API key at all.** Add it, ask "is IMO 9274446 sanctioned?", get the answer.
+
+Two ways to use it: a **remote endpoint** at `https://mcp.arcnautical.com/mcp` (nothing to install — claude.ai, ChatGPT, Claude Code, Cursor) or a **local server** over stdio with `npx -y @arcnautical/mcp` (Claude Desktop and every other stdio client).
 
 ```
 IMO 9274446 HS STAR: sanctions RED — 4 confirmed matches on vessel identifier.
 Ownership opacity MEDIUM. Vetting grade E (unacceptable). Checked 2026-09-12T08:10:40Z.
 ```
 
-## Install
+## Remote endpoint (no install)
+
+`https://mcp.arcnautical.com/mcp` — MCP Streamable HTTP, stateless, JSON responses. No authentication is required for `check_vessel` and `find_port`; the keyed tools take your API key as an `Authorization: Bearer` header on the MCP request.
+
+**claude.ai** — Settings → Connectors → *Add custom connector* → URL `https://mcp.arcnautical.com/mcp`, no authentication. The two keyless tools are available at once.
+
+**ChatGPT** — Settings → Connectors → *Create* (developer mode) → server URL `https://mcp.arcnautical.com/mcp`, no authentication.
+
+**Claude Code**
+
+```
+claude mcp add --transport http arcnautical https://mcp.arcnautical.com/mcp
+claude mcp add --transport http arcnautical https://mcp.arcnautical.com/mcp --header "Authorization: Bearer arc_live_…"
+```
+
+**Cursor** — `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "arcnautical": {
+      "url": "https://mcp.arcnautical.com/mcp",
+      "headers": { "Authorization": "Bearer arc_live_…" }
+    }
+  }
+}
+```
+
+**Anything with curl** — the endpoint is plain JSON-RPC over POST:
+
+```
+curl -s https://mcp.arcnautical.com/mcp -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"check_vessel","arguments":{"imo":"9274446"}}}'
+```
+
+The remote endpoint is a thin client of the same public API: a keyless call counts against **your** 100-per-hour allowance (the caller's address is forwarded), and a keyed call is metered on your key exactly as a direct API call would be. `GET /mcp` answers 405 — there is no server-to-client stream to hold — and `GET https://mcp.arcnautical.com/health` reports the endpoint's version.
+
+## Local server (stdio)
 
 Requires Node 18+. No install step — every client below runs it with `npx`.
 
@@ -78,8 +117,14 @@ Every resource-creating call sends an `Idempotency-Key` derived from the *questi
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `ARCNAUTICAL_API_KEY` | unset | Enables the keyed tools. |
+| `ARCNAUTICAL_API_KEY` | unset | Enables the keyed tools (stdio; the remote endpoint reads the `Authorization` header instead). |
 | `ARCNAUTICAL_BASE_URL` | `https://arcnautical.com` | Override for testing. |
+| `PORT` / `HOST` | `3005` / `0.0.0.0` | `arcnautical-mcp-http` only. |
+| `MCP_TRUST_PROXY` | unset | `arcnautical-mcp-http` only: `1` reads the caller's address from `X-Real-IP` / `CF-Connecting-IP` set by a reverse proxy. Only when nothing but the proxy can reach the port. |
+
+### Self-hosting the HTTP endpoint
+
+`npx -y -p @arcnautical/mcp arcnautical-mcp-http` serves `POST /mcp` on port 3005 — useful when your assistants run in a network that cannot spawn local processes but can reach one internal URL. The `Dockerfile` in this repository builds the same thing; it is what `mcp.arcnautical.com` runs.
 
 ## Links
 
@@ -93,7 +138,9 @@ Every resource-creating call sends an `Idempotency-Key` derived from the *questi
 
 ```
 npm install
-npm test        # builds, then drives dist/cli.js over stdio against the live keyless endpoints
+npm test        # builds, then drives dist/cli.js over stdio AND createHttpServer() over Streamable HTTP
+                # (a local stub API asserts the forwarded caller address and Bearer key; one call hits prod keyless)
+npm run start:http   # the remote endpoint on http://localhost:3005/mcp
 ```
 
 MIT © ArcNautical

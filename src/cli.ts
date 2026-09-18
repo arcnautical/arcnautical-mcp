@@ -12,7 +12,7 @@
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createServer, SERVER_NAME, SERVER_VERSION } from './index.js';
 
-const server = createServer();
+const server = createServer({ transport: 'stdio' });
 const transport = new StdioServerTransport();
 await server.connect(transport);
 process.stderr.write(`${SERVER_NAME} ${SERVER_VERSION} ready on stdio${process.env.ARCNAUTICAL_API_KEY ? ' (API key configured)' : ' (keyless: check_vessel and find_port)'}\n`);
