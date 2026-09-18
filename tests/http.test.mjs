@@ -65,6 +65,12 @@ test('remote: initialize, list seven tools, call the keyless tool, and the stub 
   assert.equal(r.structuredContent.sanctions.status, 'RED');
   assert.match(r.content[0].text, /IMO 9274446: sanctions RED/);
   assert.equal(r.structuredContent.rate_limit.remaining, 97);
+
+  // Declared output shapes, and empty (not refused) resource/prompt lists.
+  const check = tools.find((x) => x.name === 'check_vessel');
+  assert.ok(check.outputSchema?.properties?.sanctions, 'check_vessel declares its output');
+  assert.deepEqual((await client.listResources()).resources, []);
+  assert.deepEqual((await client.listPrompts()).prompts, []);
   await client.close();
 
   const upstream = api.seen.find((s) => s.url.endsWith('/check'));

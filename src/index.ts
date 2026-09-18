@@ -16,6 +16,7 @@
  * caller address differ, and both arrive through ClientOptions.
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { ListPromptsRequestSchema, ListResourcesRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { ArcNauticalClient, ArcNauticalError, type ClientOptions } from './client.js';
 
@@ -26,6 +27,35 @@ export const SERVER_NAME = 'arcnautical';
 export const SERVER_VERSION = '0.2.0';
 
 const IMO = z.string().regex(/^\d{7}$/, 'A seven-digit IMO number, e.g. 9274446').describe('Seven-digit IMO number of the vessel');
+
+/**
+ * Output shapes for the two keyless tools, declared so a client can plan on
+ * the fields before calling. Deliberately loose (`passthrough`, only the
+ * fields every answer carries): the API adds fields without notice under its
+ * additive-change policy, and a strict schema here would turn a new field
+ * into a failed tool call.
+ */
+const CHECK_OUTPUT = {
+  imo: z.string().describe('The seven-digit IMO number screened'),
+  sanctions: z.object({
+    status: z.string().describe('RED | AMBER | GREEN | INCOMPLETE'),
+    detail: z.string().optional().describe('One sentence explaining the status'),
+    coverageComplete: z.boolean().optional().describe('false when a supplementary list was unavailable — re-screen before relying on a GREEN'),
+  }).passthrough(),
+  ownership: z.object({ opacity: z.string().nullable().optional(), score: z.number().nullable().optional() }).passthrough().optional(),
+  vetting: z.object({ grade: z.string().nullable().optional(), score: z.number().nullable().optional(), status: z.string().optional() }).passthrough().optional(),
+  assessed: z.boolean().optional().describe('false means ownership and vetting are defaults, not findings'),
+  checkedAt: z.string().describe('ISO-8601 time the sources were read; designations change daily'),
+  fullReport: z.string().optional().describe('Human-readable report URL for this hull'),
+  rate_limit: z.object({ limit: z.number().nullable(), remaining: z.number().nullable(), reset: z.string().nullable() }).describe('Keyless allowance for the caller\'s address'),
+};
+const PORTS_OUTPUT = {
+  ports: z.array(z.object({
+    locode: z.string().describe('UN/LOCODE, e.g. NLRTM'),
+    name: z.string(),
+    country: z.string().optional(),
+  }).passthrough()).describe('Best matches first'),
+};
 
 const KEYLESS_NOTE =
   'Works with no API key. Rate-limited to 100 requests per hour per IP. Returns the VERDICT SUMMARY only; ' +
@@ -86,6 +116,7 @@ export function createServer(opts: ClientOptions = {}): McpServer {
         'Screen one vessel by IMO number against OFAC SDN, EU, UN, UK OFSI and OpenSanctions, with an ownership-opacity score ' +
         'and an A–E vetting grade from port-state-control history. ' + KEYLESS_NOTE,
       inputSchema: { imo: IMO },
+      outputSchema: CHECK_OUTPUT,
       annotations: { readOnlyHint: true, openWorldHint: true, idempotentHint: true },
     },
     async ({ imo }) => {
@@ -110,6 +141,7 @@ export function createServer(opts: ClientOptions = {}): McpServer {
         query: z.string().min(2).describe('Port name, country, or LOCODE fragment, e.g. "rotterdam", "NLRTM", "Piraeus"'),
         limit: z.number().int().min(1).max(20).optional().describe('Maximum matches to return (default 5)'),
       },
+      outputSchema: PORTS_OUTPUT,
       annotations: { readOnlyHint: true, openWorldHint: true, idempotentHint: true },
     },
     async ({ query, limit }) => {
@@ -241,6 +273,13 @@ export function createServer(opts: ClientOptions = {}): McpServer {
       } catch (err) { return fail(err); }
     },
   );
+
+  // No resources and no prompts — say so with an empty list rather than
+  // "method not found". Directory scanners (Smithery, 2026-09-18) ask for both
+  // and log a warning per refusal; some clients treat -32601 as a broken server.
+  server.server.registerCapabilities({ resources: {}, prompts: {} });
+  server.server.setRequestHandler(ListResourcesRequestSchema, async () => ({ resources: [] }));
+  server.server.setRequestHandler(ListPromptsRequestSchema, async () => ({ prompts: [] }));
 
   return server;
 }
