@@ -1,6 +1,6 @@
 {
   "name": "@arcnautical/mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP server for the ArcNautical API: screen any vessel by IMO for sanctions, ownership opacity and vetting grade from Claude, ChatGPT, Cursor or any MCP client. The check needs no API key.",
   "license": "MIT",
   "author": "ArcNautical <admin@arcnautical.com> (https://arcnautical.com)",
@@ -64,5 +64,5 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   },
-  "mcpName": "io.github.SaltyTaro/arcnautical"
+  "mcpName": "com.arcnautical/mcp"
 }

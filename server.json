@@ -1,19 +1,19 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.SaltyTaro/arcnautical",
+  "name": "com.arcnautical/mcp",
   "description": "Screen any vessel by IMO for sanctions, ownership opacity and vetting grade. Keyless check included.",
   "repository": {
     "url": "https://github.com/arcnautical/arcnautical-mcp",
     "source": "github"
   },
-  "version": "0.1.1",
+  "version": "0.1.2",
   "websiteUrl": "https://arcnautical.com/developers/",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@arcnautical/mcp",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "transport": {
         "type": "stdio"
       },
