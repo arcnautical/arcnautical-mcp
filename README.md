@@ -119,7 +119,7 @@ Every resource-creating call sends an `Idempotency-Key` derived from the *questi
 |---|---|---|
 | `ARCNAUTICAL_API_KEY` | unset | Enables the keyed tools (stdio; the remote endpoint reads the `Authorization` header instead). |
 | `ARCNAUTICAL_BASE_URL` | `https://arcnautical.com` | Override for testing. |
-| `PORT` / `HOST` | `3005` / `0.0.0.0` | `arcnautical-mcp-http` only. |
+| `PORT` / `HOST` | `3005` / all interfaces | `arcnautical-mcp-http` only. |
 | `MCP_TRUST_PROXY` | unset | `arcnautical-mcp-http` only: `1` reads the caller's address from `X-Real-IP` / `CF-Connecting-IP` set by a reverse proxy. Only when nothing but the proxy can reach the port. |
 
 ### Self-hosting the HTTP endpoint
