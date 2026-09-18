@@ -13,7 +13,7 @@ Ownership opacity MEDIUM. Vetting grade E (unacceptable). Checked 2026-09-12T08:
 
 ## Remote endpoint (no install)
 
-`https://mcp.arcnautical.com/mcp` — MCP Streamable HTTP, stateless, JSON responses. No authentication is required for `check_vessel` and `find_port`; the keyed tools take your API key as an `Authorization: Bearer` header on the MCP request.
+`https://mcp.arcnautical.com/mcp` — MCP Streamable HTTP, stateless, JSON responses. No authentication is required for `check_vessel` and `find_port`; the keyed tools take your API key as an `Authorization: Bearer` header on the MCP request (an `X-API-Key` or `arcnautical-api-key` header is accepted too, for gateways that name the header themselves — never a query parameter).
 
 **claude.ai** — Settings → Connectors → *Add custom connector* → URL `https://mcp.arcnautical.com/mcp`, no authentication. The two keyless tools are available at once.
 

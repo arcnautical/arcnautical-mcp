@@ -20,7 +20,8 @@
  *   caller exactly as to anyone else. Nothing here bypasses anything.
  *
  *   AUTH IS A HEADER, OR NOTHING. `Authorization: Bearer <api key>` on the MCP
- *   request is forwarded to the keyed endpoints. No header = the keyless door:
+ *   request (or `X-API-Key` / `arcnautical-api-key`, see apiKeyFrom) is
+ *   forwarded to the keyed endpoints. No header = the keyless door:
  *   check_vessel and find_port work, the rest return the remedy. That is what
  *   "add connector, no authentication" produces in every hosted client.
  *
@@ -50,7 +51,7 @@ export interface HttpServerOptions {
 const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Mcp-Session-Id, Mcp-Protocol-Version, X-Request-Id',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key, arcnautical-api-key, Accept, Mcp-Session-Id, Mcp-Protocol-Version, X-Request-Id',
   'Access-Control-Expose-Headers': 'Mcp-Session-Id, Mcp-Protocol-Version, X-Request-Id',
   'Access-Control-Max-Age': '86400',
 };
@@ -131,8 +132,7 @@ export function createHttpServer(opts: HttpServerOptions = {}): Server {
       }
       if (!(header('content-type') ?? '').includes('application/json')) req.headers['content-type'] = 'application/json';
 
-      const auth = header('authorization') ?? '';
-      const apiKey = /^bearer\s+(\S+)/i.exec(auth)?.[1];
+      const apiKey = apiKeyFrom(header);
       note += ` keyed=${apiKey ? 'yes' : 'no'}`;
 
       const server = createServer({ baseUrl, apiKey, transport: 'http', forwardedFor: callerIp, cfConnectingIp: cfIp });
@@ -146,6 +146,28 @@ export function createHttpServer(opts: HttpServerOptions = {}): Server {
       else res.end();
     }
   });
+}
+
+/**
+ * The key, from whichever header the client could send it in. `Authorization:
+ * Bearer <key>` is the contract; a bare `Authorization: <key>` and the
+ * `X-API-Key` / `arcnautical-api-key` headers are accepted because gateways
+ * that sit in front of this endpoint (Smithery's, 2026-09-18) forward a
+ * user-entered parameter as a header of their own naming, with no scheme.
+ * Never a query parameter: that would put the key in every access log.
+ */
+export function apiKeyFrom(header: (name: string) => string | undefined): string | undefined {
+  const auth = header('authorization')?.trim();
+  if (auth) {
+    const bearer = /^bearer\s+(\S+)$/i.exec(auth)?.[1];
+    if (bearer) return bearer;
+    if (/^\S+$/.test(auth) && !/^(basic|digest)\s/i.test(auth)) return auth;
+  }
+  for (const name of ['x-api-key', 'arcnautical-api-key']) {
+    const v = header(name)?.trim();
+    if (v) return v.replace(/^bearer\s+/i, '');
+  }
+  return undefined;
 }
 
 function json(res: ServerResponse, status: number, body: unknown): void {

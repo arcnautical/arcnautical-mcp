@@ -91,6 +91,17 @@ test('remote: a Bearer header on the MCP request reaches the keyed endpoint; wit
   assert.equal(screening.headers.authorization, 'Bearer arc_test_abc');
   assert.match(screening.headers['idempotency-key'], /^mcp:screening:9274446:\d{4}-\d{2}-\d{2}$/);
 
+  // A gateway in front of the endpoint (Smithery) forwards the user's key as a
+  // header of its own naming, with no scheme; a bare Authorization also works.
+  for (const headers of [{ 'arcnautical-api-key': 'arc_test_gw' }, { 'X-API-Key': 'arc_test_gw' }, { Authorization: 'arc_test_gw' }]) {
+    api.seen.length = 0;
+    const gw = await connect(base, headers);
+    const r = await gw.callTool({ name: 'screen_vessel', arguments: { imo: '9274446' } });
+    assert.equal(r.isError, undefined, JSON.stringify(headers));
+    assert.equal(api.seen.find((s) => s.url === '/api/v1/screenings').headers.authorization, 'Bearer arc_test_gw', JSON.stringify(headers));
+    await gw.close();
+  }
+
   const anon = await connect(base);
   const no = await anon.callTool({ name: 'screen_vessel', arguments: { imo: '9274446' } });
   assert.equal(no.isError, true);
