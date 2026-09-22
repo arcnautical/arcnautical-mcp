@@ -4,7 +4,7 @@ An [MCP](https://modelcontextprotocol.io) server for the [ArcNautical API](https
 
 **Two tools need no API key at all.** Add it, ask "is IMO 9274446 sanctioned?", get the answer.
 
-[![Smithery](https://img.shields.io/badge/Smithery-listed-6c47ff)](https://smithery.ai/servers/notoverkil/arcnautical) [![npm](https://img.shields.io/npm/v/%40arcnautical%2Fmcp)](https://www.npmjs.com/package/@arcnautical/mcp) [![Wellknown: live](https://wellknown.network/agents/arcnautical/badge.svg)](https://wellknown.network/agents/arcnautical)
+[![Smithery](https://img.shields.io/badge/Smithery-listed-6c47ff)](https://smithery.ai/servers/arcnautical/mcp) [![npm](https://img.shields.io/npm/v/%40arcnautical%2Fmcp)](https://www.npmjs.com/package/@arcnautical/mcp) [![Wellknown: live](https://wellknown.network/agents/arcnautical/badge.svg)](https://wellknown.network/agents/arcnautical)
 
 Two ways to use it: a **remote endpoint** at `https://mcp.arcnautical.com/mcp` (nothing to install — claude.ai, ChatGPT, Claude Code, Cursor) or a **local server** over stdio with `npx -y @arcnautical/mcp` (Claude Desktop and every other stdio client).
 
@@ -135,7 +135,7 @@ Every resource-creating call sends an `Idempotency-Key` derived from the *questi
 - OpenAPI 3.1: https://arcnautical.com/api/v1/openapi.json
 - Postman: https://www.postman.com/arcnautical-6322764/arcnautical-s-workspace
 - For agents: https://arcnautical.com/llms.txt
-- Listed on: [MCP registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=com.arcnautical/mcp) (`com.arcnautical/mcp`) · [Smithery](https://smithery.ai/servers/notoverkil/arcnautical) · [npm](https://www.npmjs.com/package/@arcnautical/mcp) · [Wellknown](https://wellknown.network/agents/arcnautical) (verified owner; live reachability checks)
+- Listed on: [MCP registry](https://registry.modelcontextprotocol.io/v0.1/servers?search=com.arcnautical/mcp) (`com.arcnautical/mcp`) · [Smithery](https://smithery.ai/servers/arcnautical/mcp) · [npm](https://www.npmjs.com/package/@arcnautical/mcp) · [Wellknown](https://wellknown.network/agents/arcnautical) (verified owner; live reachability checks)
 
 ## Development
 
