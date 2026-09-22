@@ -4,7 +4,7 @@ An [MCP](https://modelcontextprotocol.io) server for the [ArcNautical API](https
 
 **Two tools need no API key at all.** Add it, ask "is IMO 9274446 sanctioned?", get the answer.
 
-[![smithery badge](https://smithery.ai/badge/notoverkil/arcnautical)](https://smithery.ai/servers/notoverkil/arcnautical) [![npm](https://img.shields.io/npm/v/%40arcnautical%2Fmcp)](https://www.npmjs.com/package/@arcnautical/mcp) [![Wellknown: live](https://wellknown.network/agents/arcnautical/badge.svg)](https://wellknown.network/agents/arcnautical)
+[![Smithery](https://img.shields.io/badge/Smithery-listed-6c47ff)](https://smithery.ai/servers/notoverkil/arcnautical) [![npm](https://img.shields.io/npm/v/%40arcnautical%2Fmcp)](https://www.npmjs.com/package/@arcnautical/mcp) [![Wellknown: live](https://wellknown.network/agents/arcnautical/badge.svg)](https://wellknown.network/agents/arcnautical)
 
 Two ways to use it: a **remote endpoint** at `https://mcp.arcnautical.com/mcp` (nothing to install — claude.ai, ChatGPT, Claude Code, Cursor) or a **local server** over stdio with `npx -y @arcnautical/mcp` (Claude Desktop and every other stdio client).
 
