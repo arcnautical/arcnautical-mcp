@@ -89,7 +89,7 @@ export function keyRequiredError(transport: 'stdio' | 'http'): ArcNauticalError 
   return new ArcNauticalError(401, {
     code: 'api_key_required',
     message: `This tool needs an ArcNautical API key. ${where}`,
-    remedy: 'Mint a key self-serve at https://arcnautical.com/arcnautical.html#/developer-api (no approval step); the check_vessel and find_port tools work without one.',
+    remedy: 'Keys are free and self-serve, no card and no approval step: https://arcnautical.com/get-a-key?from=mcp — the check_vessel and find_port tools work without one.',
   }, null);
 }
 

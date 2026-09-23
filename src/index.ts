@@ -24,7 +24,7 @@ export { ArcNauticalClient, ArcNauticalError } from './client.js';
 export type { ClientOptions } from './client.js';
 
 export const SERVER_NAME = 'arcnautical';
-export const SERVER_VERSION = '0.2.0';
+export const SERVER_VERSION = '0.2.1';
 
 const IMO = z.string().regex(/^\d{7}$/, 'A seven-digit IMO number, e.g. 9274446').describe('Seven-digit IMO number of the vessel');
 

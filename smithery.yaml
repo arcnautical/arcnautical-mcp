@@ -7,7 +7,7 @@ startCommand:
       arcnauticalApiKey:
         type: string
         title: ArcNautical API key
-        description: Optional. Self-serve at https://arcnautical.com/arcnautical.html#/developer-api. check_vessel and find_port work without it.
+        description: Optional. Self-serve at https://arcnautical.com/get-a-key?from=mcp. check_vessel and find_port work without it.
   commandFunction: |-
     (config) => ({
       command: 'node',

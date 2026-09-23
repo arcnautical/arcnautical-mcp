@@ -1,6 +1,6 @@
 {
   "name": "@arcnautical/mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "MCP server for the ArcNautical API: screen any vessel by IMO for sanctions, ownership opacity and vetting grade from Claude, ChatGPT, Cursor or any MCP client. The check needs no API key. Local (stdio) or remote at https://mcp.arcnautical.com/mcp.",
   "license": "MIT",
   "author": "ArcNautical <admin@arcnautical.com> (https://arcnautical.com)",
@@ -31,8 +31,7 @@
   ],
   "type": "module",
   "bin": {
-    "arcnautical-mcp": "dist/cli.js",
-    "arcnautical-mcp-http": "dist/serve.js"
+    "arcnautical-mcp": "dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

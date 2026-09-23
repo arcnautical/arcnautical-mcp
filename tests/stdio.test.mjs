@@ -62,7 +62,7 @@ test('a keyed tool without a key returns the remedy, not a crash', async () => {
   const r = await client.callTool({ name: 'screen_vessel', arguments: { imo: '9274446' } });
   assert.equal(r.isError, true);
   assert.match(r.content[0].text, /ARCNAUTICAL_API_KEY/);
-  assert.match(r.content[0].text, /developer-api/);
+  assert.match(r.content[0].text, /get-a-key/);
   assert.match(r.content[0].text, /check_vessel/);
   await client.close();
 });

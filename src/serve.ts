@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * `arcnautical-mcp-http` — the remote endpoint as a process. Listens on
+ * `arcnautical-mcp --http` — the remote endpoint as a process. Listens on
  * PORT (3005) and serves POST /mcp; see http.ts for the shape. This is what
  * the arcnautical-mcp container on prod runs, and what anyone self-hosting a
  * keyed endpoint for their own assistants would run.

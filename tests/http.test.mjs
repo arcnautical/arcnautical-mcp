@@ -122,7 +122,7 @@ test('remote: a Bearer header on the MCP request reaches the keyed endpoint; wit
   const no = await anon.callTool({ name: 'screen_vessel', arguments: { imo: '9274446' } });
   assert.equal(no.isError, true);
   assert.match(no.content[0].text, /Authorization: Bearer/);
-  assert.match(no.content[0].text, /developer-api/);
+  assert.match(no.content[0].text, /get-a-key/);
   assert.match(no.content[0].text, /check_vessel/);
   assert.doesNotMatch(no.content[0].text, /ARCNAUTICAL_API_KEY/, 'an HTTP caller has no environment to set');
   await anon.close();

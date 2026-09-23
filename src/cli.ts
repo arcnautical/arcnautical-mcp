@@ -8,11 +8,21 @@
  *   ARCNAUTICAL_BASE_URL  optional; defaults to https://arcnautical.com.
  *
  * Nothing is written to stdout except protocol frames — logs go to stderr.
+ *
+ * `--http` serves the remote transport instead (serve.ts). It is a flag and
+ * not a second bin on purpose: with two bins and neither named `mcp`, npx
+ * cannot tell which to run, and `npx -y @arcnautical/mcp` — the command in
+ * the README, /developers/ and the MCP registry — failed with "could not
+ * determine executable to run" for every install of 0.2.0.
  */
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createServer, SERVER_NAME, SERVER_VERSION } from './index.js';
 
-const server = createServer({ transport: 'stdio' });
-const transport = new StdioServerTransport();
-await server.connect(transport);
-process.stderr.write(`${SERVER_NAME} ${SERVER_VERSION} ready on stdio${process.env.ARCNAUTICAL_API_KEY ? ' (API key configured)' : ' (keyless: check_vessel and find_port)'}\n`);
+if (process.argv.includes('--http')) {
+  await import('./serve.js');
+} else {
+  const server = createServer({ transport: 'stdio' });
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  process.stderr.write(`${SERVER_NAME} ${SERVER_VERSION} ready on stdio${process.env.ARCNAUTICAL_API_KEY ? ' (API key configured)' : ' (keyless: check_vessel and find_port)'}\n`);
+}

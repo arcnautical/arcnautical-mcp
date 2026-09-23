@@ -89,7 +89,7 @@ To unlock the full record, batches and voyage scoring, add an API key to the `en
 }
 ```
 
-Keys are self-serve at https://arcnautical.com/arcnautical.html#/developer-api — no approval step. A key includes 5,000 vessel screenings and 10,000 voyage assessments a month.
+Keys are free and self-serve at https://arcnautical.com/get-a-key?from=mcp — no card, no approval step. A key includes 5,000 vessel screenings and 10,000 voyage assessments a month.
 
 ## Tools
 
@@ -121,12 +121,12 @@ Every resource-creating call sends an `Idempotency-Key` derived from the *questi
 |---|---|---|
 | `ARCNAUTICAL_API_KEY` | unset | Enables the keyed tools (stdio; the remote endpoint reads the `Authorization` header instead). |
 | `ARCNAUTICAL_BASE_URL` | `https://arcnautical.com` | Override for testing. |
-| `PORT` / `HOST` | `3005` / all interfaces | `arcnautical-mcp-http` only. |
-| `MCP_TRUST_PROXY` | unset | `arcnautical-mcp-http` only: `1` reads the caller's address from `X-Real-IP` / `CF-Connecting-IP` set by a reverse proxy. Only when nothing but the proxy can reach the port. |
+| `PORT` / `HOST` | `3005` / all interfaces | `--http` only. |
+| `MCP_TRUST_PROXY` | unset | `--http` only: `1` reads the caller's address from `X-Real-IP` / `CF-Connecting-IP` set by a reverse proxy. Only when nothing but the proxy can reach the port. |
 
 ### Self-hosting the HTTP endpoint
 
-`npx -y -p @arcnautical/mcp arcnautical-mcp-http` serves `POST /mcp` on port 3005 — useful when your assistants run in a network that cannot spawn local processes but can reach one internal URL. The `Dockerfile` in this repository builds the same thing; it is what `mcp.arcnautical.com` runs.
+`npx -y @arcnautical/mcp --http` serves `POST /mcp` on port 3005 — useful when your assistants run in a network that cannot spawn local processes but can reach one internal URL. The `Dockerfile` in this repository builds the same thing; it is what `mcp.arcnautical.com` runs.
 
 ## Links
 
