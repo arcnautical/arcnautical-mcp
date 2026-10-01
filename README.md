@@ -89,7 +89,7 @@ To unlock the full record, batches and voyage scoring, add an API key to the `en
 }
 ```
 
-Keys are free and self-serve at https://arcnautical.com/get-a-key?from=mcp — no card, no approval step. A key includes 5,000 vessel screenings and 10,000 voyage assessments a month.
+Keys are free and self-serve at https://arcnautical.com/get-a-key?from=mcp — no card, no approval step. A new key includes 5,000 vessel screenings once (a one-time allowance) and 10,000 voyage assessments a month.
 
 ## Tools
 
