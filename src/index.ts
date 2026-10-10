@@ -203,7 +203,7 @@ export function createServer(opts: ClientOptions = {}): McpServer {
       description:
         'The authenticated screening record for one vessel: every sanctions match with its source list, programme and ' +
         'confidence class, ownership opacity, the graded vetting factors, per-source freshness, and a retained record id. ' +
-        'Needs ARCNAUTICAL_API_KEY. Metered: a new self-serve key includes 5,000 live screenings once (a one-time allowance). The same ' +
+        'Needs ARCNAUTICAL_API_KEY. Metered: a new self-serve key includes a one-time free allowance of live screenings; get_usage reports what is left. The same ' +
         'vessel asked again on the same day replays the stored record free. If the result is INCOMPLETE for identity, ' +
         'call again with vessel_name.',
       inputSchema: {
