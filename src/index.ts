@@ -70,7 +70,7 @@ const BATCH_OUTPUT = {
 const VOYAGE_OUTPUT = {
   id: z.string().optional().describe('Assessment id'),
   score: z.number().optional().describe('0-100, higher is riskier'),
-  risk_level: z.string().optional().describe('low | moderate | elevated | high | severe'),
+  risk_level: z.string().optional().describe('low | moderate | elevated | high | critical'),
   confidence: z.number().optional().describe('0-1'),
   missing_sources: z.array(z.string()).optional().describe('Signals that could not be read for this assessment'),
   route: z.object({ distance_nm: z.number().optional() }).passthrough().optional(),
@@ -275,15 +275,17 @@ export function createServer(opts: ClientOptions = {}): McpServer {
       title: 'Score a voyage route (API key)',
       description:
         'Route risk between two ports (UN/LOCODEs): a 0–100 score, risk level, the signals driving it (war-risk areas, piracy, ' +
-        'chokepoints, weather, sanctions exposure of transited EEZs), confidence and any missing sources. Resolve port names ' +
-        'with find_port first. Needs ARCNAUTICAL_API_KEY; 10,000 assessments a month are included with a self-serve key.',
+        'chokepoints, weather, sanctions exposure of transited EEZs), sea days, confidence and any missing sources. On lanes that ' +
+        'can go either way round Africa it also scores the other passage (Suez or Cape) in `alternatives`. Resolve port names ' +
+        'with find_port first. Needs ARCNAUTICAL_API_KEY; see get_usage for the allowance.',
       inputSchema: {
         origin: z.string().regex(/^[A-Za-z]{5}$/).describe('Origin UN/LOCODE, e.g. NLRTM'),
         destination: z.string().regex(/^[A-Za-z]{5}$/).describe('Destination UN/LOCODE, e.g. CNSHA'),
+        passage: z.enum(['shortest', 'suez', 'cape']).optional().describe('Which way round Africa to score: shortest (default; Suez on Asia-Europe), suez or cape. Refused on lanes with no such passage'),
         vessel_type: z.enum(['container', 'bulk', 'tanker', 'lng', 'general']).optional().describe('Vessel class; changes which threat signals weigh most (default: general)'),
-        load_condition: z.enum(['laden', 'ballast']).optional().describe('laden or ballast; affects exposure on the transit'),
-        speed_knots: z.number().min(8).max(25).optional().describe('Planned service speed, 8-25 knots; sets transit time through each risk area'),
-        dwt_tonnes: z.number().min(1).max(600000).optional().describe('Deadweight in tonnes; used for chokepoint and draught constraints'),
+        load_condition: z.enum(['laden', 'ballast']).optional().describe('laden or ballast; affects exposure on the transit (with vessel_type)'),
+        speed_knots: z.number().min(8).max(25).optional().describe('Planned service speed, 8-25 knots; sets route.transit_days (default 14), and with vessel_type times the weather'),
+        dwt_tonnes: z.number().min(1).max(600000).optional().describe('Deadweight in tonnes; accepted, but it does not change the score today'),
         customer_reference: z.string().max(128).optional().describe('Your own reference (voyage id, fixture); echoed on the assessment'),
       },
       outputSchema: VOYAGE_OUTPUT,
@@ -292,9 +294,17 @@ export function createServer(opts: ClientOptions = {}): McpServer {
     async (input) => {
       try {
         const { body, replayed } = await client.scoreVoyage(input);
-        const a = body as { id?: string; score?: number; risk_level?: string; confidence?: number; missing_sources?: string[]; route?: { distance_nm?: number } };
+        const a = body as {
+          id?: string; score?: number; risk_level?: string; confidence?: number; missing_sources?: string[];
+          route?: { distance_nm?: number; passage?: string; transit_days?: number };
+          alternatives?: Array<{ passage?: string; status?: string; score?: number; risk_level?: string; days_vs_scored?: number }>;
+        };
+        const alt = a.alternatives?.find(x => x.status === 'scored');
         const summary = `${input.origin.toUpperCase()} → ${input.destination.toUpperCase()}: score ${a.score} (${a.risk_level}), confidence ${a.confidence}` +
           (a.route?.distance_nm ? `, ${a.route.distance_nm} nm` : '') +
+          (a.route?.passage && a.route.passage !== 'none' ? ` via ${a.route.passage}` : '') +
+          (a.route?.transit_days ? `, ~${a.route.transit_days} sea days` : '') +
+          (alt ? `. Via ${alt.passage}: score ${alt.score} (${alt.risk_level}), ${alt.days_vs_scored != null && alt.days_vs_scored >= 0 ? '+' : ''}${alt.days_vs_scored} days` : '') +
           (a.missing_sources?.length ? `. Missing sources: ${a.missing_sources.join(', ')}` : '') +
           (replayed ? '. (Replayed from an earlier assessment today.)' : '.');
         return ok(body as Record<string, unknown>, summary);

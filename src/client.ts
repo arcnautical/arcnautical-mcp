@@ -193,6 +193,7 @@ export class ArcNauticalClient {
   async scoreVoyage(input: {
     origin: string;
     destination: string;
+    passage?: string;
     vessel_type?: string;
     load_condition?: string;
     speed_knots?: number;
